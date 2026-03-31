@@ -1,7 +1,7 @@
 package com.giftapp.backend.controller;
 
-import com.giftapp.backend.entity.Gift;
-import com.giftapp.backend.repository.GiftRepository;
+import com.giftapp.backend.dto.GiftDTO;
+import com.giftapp.backend.service.GiftService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -10,19 +10,19 @@ import java.util.List;
 @RequestMapping("/gifts")
 public class GiftController {
 
-    private final GiftRepository repo;
+    private final GiftService giftService;
 
-    public GiftController(GiftRepository repo) {
-        this.repo = repo;
+    public GiftController(GiftService giftService) {
+        this.giftService = giftService;
     }
 
     @GetMapping
-    public List<Gift> getAll() {
-        return repo.findAll();
+    public List<GiftDTO> getAll() {
+        return giftService.getAllGifts();
     }
 
     @PostMapping("/add")
-    public Gift create(@RequestBody Gift gift) {
-        return repo.save(gift);
+    public GiftDTO add(@RequestBody GiftDTO giftDTO) {
+        return giftService.addGift(giftDTO);
     }
 }

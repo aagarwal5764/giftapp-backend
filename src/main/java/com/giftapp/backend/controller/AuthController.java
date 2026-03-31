@@ -39,7 +39,7 @@ public class AuthController {
         return userRepository.findByUsername(user.getUsername())
                 .map(u -> {
                     if (passwordEncoder.matches(user.getPassword(), u.getPassword())) {
-                        return jwtUtil.generateToken(u.getUsername()); // return JWT
+                        return jwtUtil.generateToken(u.getUsername(), u.getRole());
                     } else {
                         return "Invalid password";
                     }

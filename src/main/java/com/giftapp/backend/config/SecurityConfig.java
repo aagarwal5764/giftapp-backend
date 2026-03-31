@@ -22,17 +22,20 @@ public class SecurityConfig {
 
         http
                 .csrf(csrf -> csrf.disable())
-
-                // 🔥 THIS FIXES 403 → 401
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            response.getWriter().write("Unauthorized");
+                        .authenticationEntryPoint((req, res, ex2) -> {
+                            res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            res.getWriter().write("Access denied. Please log in and send a valid JWT token in the Authorization header.");
                         })
                 )
-
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
+
+                        // ROLE RULES
+                        .requestMatchers("/gifts/add").hasRole("ADMIN")
+                        .requestMatchers("/gifts/delete/**").hasRole("ADMIN")
+                        .requestMatchers("/gifts/**").hasAnyRole("USER", "ADMIN")
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

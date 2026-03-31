@@ -21,7 +21,7 @@ public class GiftController {
         return repo.findAll();
     }
 
-    @PostMapping
+    @PostMapping("/add")
     public Gift create(@RequestBody Gift gift) {
         return repo.save(gift);
     }

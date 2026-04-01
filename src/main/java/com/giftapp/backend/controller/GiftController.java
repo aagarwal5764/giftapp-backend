@@ -21,9 +21,12 @@ public class GiftController {
 
     @GetMapping
     public Page<GiftDTO> getAll(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size) {
-        return giftService.getGifts(page, size);
+        return giftService.searchGifts(name, minPrice, maxPrice, page, size);
     }
 
     @PostMapping("/add")

@@ -52,4 +52,22 @@ public class GiftServiceImpl implements GiftService {
         return giftRepository.findAll(PageRequest.of(page, size))
                 .map(this::convertToDTO);
     }
+
+    @Override
+    public Page<GiftDTO> searchGifts(String name, Double minPrice, Double maxPrice, int page, int size) {
+
+        PageRequest pageRequest = PageRequest.of(page, size);
+
+        Page<Gift> gifts;
+
+        if (name != null) {
+            gifts = giftRepository.findByNameContainingIgnoreCase(name, pageRequest);
+        } else if (minPrice != null && maxPrice != null) {
+            gifts = giftRepository.findByPriceBetween(minPrice, maxPrice, pageRequest);
+        } else {
+            gifts = giftRepository.findAll(pageRequest);
+        }
+
+        return gifts.map(this::convertToDTO);
+    }
 }

@@ -8,4 +8,5 @@ public interface GiftService {
     List<GiftDTO> getAllGifts();
     GiftDTO addGift(GiftDTO giftDTO);
     Page<GiftDTO> getGifts(int page, int size);
+    Page<GiftDTO> searchGifts(String name, Double minPrice, Double maxPrice, int page, int size);
 }

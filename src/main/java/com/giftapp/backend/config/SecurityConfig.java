@@ -1,5 +1,7 @@
 package com.giftapp.backend.config;
 
+import com.giftapp.backend.security.CustomAccessDeniedHandler;
+import com.giftapp.backend.security.JwtAuthenticationEntryPoint;
 import com.giftapp.backend.security.JwtFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
@@ -12,9 +14,15 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
+    private final JwtAuthenticationEntryPoint authEntryPoint;
+    private final CustomAccessDeniedHandler accessDeniedHandler;
 
-    public SecurityConfig(JwtFilter jwtFilter) {
+    public SecurityConfig(JwtFilter jwtFilter,
+                          JwtAuthenticationEntryPoint authEntryPoint,
+                          CustomAccessDeniedHandler accessDeniedHandler) {
         this.jwtFilter = jwtFilter;
+        this.authEntryPoint = authEntryPoint;
+        this.accessDeniedHandler = accessDeniedHandler;
     }
 
     @Bean
@@ -25,7 +33,23 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((req, res, ex2) -> {
                             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            res.getWriter().write("Access denied. Please log in and send a valid JWT token in the Authorization header.");
+                            res.setContentType("application/json");
+                            res.getWriter().write("""
+                                {
+                                  "error": "Unauthorized",
+                                  "message": "Missing JWT token"
+                                }
+                                """);
+                        })
+                        .accessDeniedHandler((req, res, ex2) -> {
+                            res.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            res.setContentType("application/json");
+                            res.getWriter().write("""
+                                {
+                                  "error": "Forbidden",
+                                  "message": "You do not have permission to access this resource"
+                                }
+                                """);
                         })
                 )
                 .authorizeHttpRequests(auth -> auth

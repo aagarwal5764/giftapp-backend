@@ -6,6 +6,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.web.bind.annotation.RequestParam;
+
 @RestController
 @RequestMapping("/gifts")
 public class GiftController {
@@ -17,8 +20,10 @@ public class GiftController {
     }
 
     @GetMapping
-    public List<GiftDTO> getAll() {
-        return giftService.getAllGifts();
+    public Page<GiftDTO> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        return giftService.getGifts(page, size);
     }
 
     @PostMapping("/add")

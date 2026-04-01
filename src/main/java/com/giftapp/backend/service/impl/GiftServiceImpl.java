@@ -9,6 +9,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+
 @Service
 public class GiftServiceImpl implements GiftService {
 
@@ -42,5 +45,11 @@ public class GiftServiceImpl implements GiftService {
         dto.setName(gift.getName());
         dto.setPrice(gift.getPrice());
         return dto;
+    }
+
+    @Override
+    public Page<GiftDTO> getGifts(int page, int size) {
+        return giftRepository.findAll(PageRequest.of(page, size))
+                .map(this::convertToDTO);
     }
 }

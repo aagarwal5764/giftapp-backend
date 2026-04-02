@@ -1,5 +1,6 @@
 package com.giftapp.backend.service.impl;
 
+import com.giftapp.backend.config.RecommendationConfig;
 import com.giftapp.backend.dto.GiftDTO;
 import com.giftapp.backend.dto.RecommendationRequest;
 import com.giftapp.backend.dto.RecommendationResponse;
@@ -17,9 +18,11 @@ import java.util.List;
 public class GiftServiceImpl implements GiftService {
 
     private final GiftRepository giftRepository;
+    private final RecommendationConfig recommendationConfig;
 
-    public GiftServiceImpl(GiftRepository giftRepository) {
+    public GiftServiceImpl(GiftRepository giftRepository, RecommendationConfig recommendationConfig) {
         this.giftRepository = giftRepository;
+        this.recommendationConfig = recommendationConfig;
     }
 
     @Override
@@ -92,7 +95,7 @@ public class GiftServiceImpl implements GiftService {
                     );
                 })
                 // remove weak matches
-                .filter(r -> r.getScore() > 30)
+                .filter(r -> r.getScore() > recommendationConfig.getMinScore())
                 // sort descending
                 .sorted((a, b) -> Integer.compare(b.getScore(), a.getScore()))
                 // limit results
@@ -103,26 +106,33 @@ public class GiftServiceImpl implements GiftService {
     private int calculateScore(Gift gift, RecommendationRequest req) {
         int score = 0;
 
-        // 🎯 Gender match
+        // Gender
         if (gift.getGender().equalsIgnoreCase(req.getGender())) {
-            score += 25;
+            score += recommendationConfig.getGenderWeight();
         } else if (gift.getGender().equalsIgnoreCase("UNISEX")) {
-            score += 15;
+            score += recommendationConfig.getUnisexWeight();
         }
 
-        // 🎯 Occasion match
+        // Occasion
         if (gift.getOccasion().equalsIgnoreCase(req.getOccasion())) {
-            score += 25;
+            score += recommendationConfig.getOccasionWeight();
         }
 
-        // 🎯 Age match
+        // Age
         if (req.getAge() >= gift.getMinAge() && req.getAge() <= gift.getMaxAge()) {
-            score += 25;
+            score += recommendationConfig.getAgeWeight();
         }
 
-        // 🎯 Budget match
+        // Budget
         if (req.getBudget() != null && gift.getPrice() <= req.getBudget()) {
-            score += 25;
+            score += recommendationConfig.getBudgetWeight();
+        }
+
+        // Colour
+        if (req.getColour() != null &&
+                gift.getColour() != null &&
+                gift.getColour().equalsIgnoreCase(req.getColour())) {
+            score += recommendationConfig.getColourWeight();
         }
 
         return score;

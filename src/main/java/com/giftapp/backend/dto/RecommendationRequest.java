@@ -9,4 +9,5 @@ public class RecommendationRequest {
     private String gender;
     private String occasion;
     private Double budget;
+    private String colour;
 }

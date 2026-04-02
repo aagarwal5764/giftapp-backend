@@ -1,16 +1,17 @@
 package com.giftapp.backend.service.impl;
 
 import com.giftapp.backend.dto.GiftDTO;
+import com.giftapp.backend.dto.RecommendationRequest;
+import com.giftapp.backend.dto.RecommendationResponse;
 import com.giftapp.backend.entity.Gift;
 import com.giftapp.backend.repository.GiftRepository;
 import com.giftapp.backend.service.GiftService;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+
+import java.util.List;
 
 @Service
 public class GiftServiceImpl implements GiftService {
@@ -22,18 +23,23 @@ public class GiftServiceImpl implements GiftService {
     }
 
     @Override
-    public List<GiftDTO> getAllGifts() {
-        return giftRepository.findAll()
-                .stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
     public GiftDTO addGift(GiftDTO dto) {
+        if (giftRepository.existsByCategoryIgnoreCaseAndColourIgnoreCaseAndNameIgnoreCase(
+                dto.getCategory(), dto.getColour(), dto.getName())) {
+            throw new RuntimeException(
+                    "A gift with category '" + dto.getCategory() +
+                    "', colour '" + dto.getColour() +
+                    "' and name '" + dto.getName() + "' already exists.");
+        }
         Gift gift = new Gift();
         gift.setName(dto.getName());
+        gift.setCategory(dto.getCategory());
+        gift.setColour(dto.getColour());
         gift.setPrice(dto.getPrice());
+        gift.setGender(dto.getGender());
+        gift.setOccasion(dto.getOccasion());
+        gift.setMinAge(dto.getMinAge());
+        gift.setMaxAge(dto.getMaxAge());
 
         Gift saved = giftRepository.save(gift);
         return convertToDTO(saved);
@@ -43,14 +49,14 @@ public class GiftServiceImpl implements GiftService {
         GiftDTO dto = new GiftDTO();
         dto.setId(gift.getId());
         dto.setName(gift.getName());
+        dto.setCategory(gift.getCategory());
+        dto.setColour(gift.getColour());
         dto.setPrice(gift.getPrice());
+        dto.setGender(gift.getGender());
+        dto.setOccasion(gift.getOccasion());
+        dto.setMinAge(gift.getMinAge());
+        dto.setMaxAge(gift.getMaxAge());
         return dto;
-    }
-
-    @Override
-    public Page<GiftDTO> getGifts(int page, int size) {
-        return giftRepository.findAll(PageRequest.of(page, size))
-                .map(this::convertToDTO);
     }
 
     @Override
@@ -69,5 +75,56 @@ public class GiftServiceImpl implements GiftService {
         }
 
         return gifts.map(this::convertToDTO);
+    }
+
+    @Override
+    public List<RecommendationResponse> recommendGifts(RecommendationRequest request) {
+        return giftRepository.findAll().stream()
+                .map(gift -> {
+                    int score = calculateScore(gift, request);
+                    return new RecommendationResponse(
+                            gift.getId(),
+                            gift.getName(),
+                            gift.getCategory(),
+                            gift.getColour(),
+                            gift.getPrice(),
+                            score
+                    );
+                })
+                // remove weak matches
+                .filter(r -> r.getScore() > 30)
+                // sort descending
+                .sorted((a, b) -> Integer.compare(b.getScore(), a.getScore()))
+                // limit results
+                .limit(5)
+                .toList();
+    }
+
+    private int calculateScore(Gift gift, RecommendationRequest req) {
+        int score = 0;
+
+        // 🎯 Gender match
+        if (gift.getGender().equalsIgnoreCase(req.getGender())) {
+            score += 25;
+        } else if (gift.getGender().equalsIgnoreCase("UNISEX")) {
+            score += 15;
+        }
+
+        // 🎯 Occasion match
+        if (gift.getOccasion().equalsIgnoreCase(req.getOccasion())) {
+            score += 25;
+        }
+
+        // 🎯 Age match
+        if (req.getAge() >= gift.getMinAge() && req.getAge() <= gift.getMaxAge()) {
+            score += 25;
+        }
+
+        // 🎯 Budget match
+        if (req.getBudget() != null && gift.getPrice() <= req.getBudget()) {
+            score += 25;
+        }
+
+        return score;
     }
 }

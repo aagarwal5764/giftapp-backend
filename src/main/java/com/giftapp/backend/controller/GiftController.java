@@ -1,6 +1,8 @@
 package com.giftapp.backend.controller;
 
 import com.giftapp.backend.dto.GiftDTO;
+import com.giftapp.backend.dto.RecommendationRequest;
+import com.giftapp.backend.dto.RecommendationResponse;
 import com.giftapp.backend.service.GiftService;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,5 +34,10 @@ public class GiftController {
     @PostMapping("/add")
     public GiftDTO add(@RequestBody GiftDTO giftDTO) {
         return giftService.addGift(giftDTO);
+    }
+
+    @PostMapping("/recommend")
+    public List<RecommendationResponse> recommend(@RequestBody RecommendationRequest request) {
+        return giftService.recommendGifts(request);
     }
 }

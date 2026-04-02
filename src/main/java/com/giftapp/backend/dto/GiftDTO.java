@@ -7,5 +7,11 @@ public class GiftDTO {
 
     private Long id;
     private String name;
+    private String category;
+    private String colour;
     private double price;
+    private String gender;     // MALE / FEMALE / UNISEX
+    private String occasion;   // BIRTHDAY / ANNIVERSARY
+    private Integer minAge;
+    private Integer maxAge;
 }
